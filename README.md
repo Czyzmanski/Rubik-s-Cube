@@ -1,5 +1,6 @@
 # Rubik's Cube simulator
-Program first reads cube size and then executes commands rotating given layers of specified wall by desirable angle.
+Program first reads cube size, if one is provided - if not, cube size is set to default size, which is 3.
+Then, it executes commands rotating given layers of specified wall by desirable angle.
 It also prints current state of the cube when Enter key is hit.
 Simulator accepts commands consisting of 3 parts: wall, number of layers to rotate and rotation angle.
 

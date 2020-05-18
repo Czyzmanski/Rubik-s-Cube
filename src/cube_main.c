@@ -1,7 +1,9 @@
 #include "input.h"
 
+#define DEFAULT_CUBE_SIZE 3
+
 int main() {
-    int cube_size;
+    int cube_size = DEFAULT_CUBE_SIZE;
     int c = read_cube_size(&cube_size);
 
     cube_t cube;

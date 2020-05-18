@@ -10,7 +10,7 @@ int read_cube_size(int *size) {
         c = getchar();
     } while (isspace(c));
 
-    if (c != END_OF_DATA) {
+    if (isdigit(c)) {
         *size = 0;
         while (isdigit(c)) {
             *size = *size * 10 + (c - '0');

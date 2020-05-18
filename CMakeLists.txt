@@ -11,7 +11,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_C_STANDARD 11)
 include_directories(src)
 
-add_executable(RubiksCube
+set(SOURCE_FILES
         src/cube_main.c
         src/rotation.h
         src/rotation.c
@@ -20,3 +20,5 @@ add_executable(RubiksCube
         src/command.h
         src/input.h
         src/input.c)
+
+add_executable(simulator ${SOURCE_FILES})

@@ -1,405 +1,309 @@
 #include "rotation.h"
 
+#define UP 'u'
+#define LEFT 'l'
+#define FRONT 'f'
+#define RIGHT 'r'
+#define BACK 'b'
+#define DOWN 'd'
+
+#define UPPER_WALL 0
+#define LEFT_WALL 1
+#define FRONT_WALL 2
+#define RIGHT_WALL 3
+#define BACK_WALL 4
+#define DOWN_WALL 5
+
+#define DEGREES_90_CLOCKWISE 0
+#define DEGREES_90_COUNTERCLOCKWISE '\''
+#define DEGREES_180 '"'
+
 static inline void swap(char *a, char *b) {
     char tmp = *a;
     *a = *b;
     *b = tmp;
 }
 
-static inline void inverse_row(char row[SIZE]) {
-    for (int i = 0, j = SIZE - 1; i < j; i++, j--) {
+static inline void inverse_row(char row[], int size) {
+    for (int i = 0, j = size - 1; i < j; i++, j--) {
         swap(&row[i], &row[j]);
     }
 }
 
-static inline void swap_and_inverse_rows(char row1[SIZE], char row2[SIZE]) {
-    for (int i = 0, j = SIZE - 1; i < SIZE && j >= 0; i++, j--) {
+static inline void swap_and_inverse_rows(char row1[], char row2[], int size) {
+    for (int i = 0, j = size - 1; i < size && j >= 0; i++, j--) {
         swap(&row1[i], &row2[j]);
     }
 }
 
-static inline void swap_and_inverse_columns(char wall1[][SIZE], int col1,
-                                            char wall2[][SIZE], int col2) {
-    for (int i = 0, j = SIZE - 1; i < SIZE && j >= 0; i++, j--) {
+static inline void swap_and_inverse_columns(char *wall1[], int col1,
+                                            char *wall2[], int col2, int size) {
+    for (int i = 0, j = size - 1; i < size && j >= 0; i++, j--) {
         swap(&wall1[i][col1], &wall2[j][col2]);
     }
 }
 
-/* walls[order[0]] denotes upper wall
- * walls[order[1]] denotes left wall
- * walls[order[2]] denotes front wall
- * walls[order[3]] denotes right wall
- * walls[order[4]] denotes back wall
- * walls[order[5]] denotes down wall
- */
-static void rotate_layer_left(char walls[][SIZE][SIZE],
-                              const int order[6], int layer) {
-    int upper = order[0];
-    int left = order[1];
-    int right = order[3];
-    int down = order[5];
+static void rotate_layer_left(cube_t *cube, const int order[WALLS], int layer) {
+    int upper = order[UPPER_WALL];
+    int left = order[LEFT_WALL];
+    int right = order[RIGHT_WALL];
+    int down = order[DOWN_WALL];
 
-    for (int i = 0; i < SIZE; i++) {
-        char tmp = walls[upper][SIZE - layer][i];
-        walls[upper][SIZE - layer][i] = walls[right][i][layer - 1];
-        walls[right][i][layer - 1] = walls[down][layer - 1][SIZE - 1 - i];
-        walls[down][layer - 1][SIZE - 1 - i]
-                = walls[left][SIZE - 1 - i][SIZE - layer];
-        walls[left][SIZE - 1 - i][SIZE - layer] = tmp;
+    int size = cube->size;
+    char ***walls = cube->walls;
+
+    for (int i = 0; i < size; i++) {
+        char tmp = walls[upper][size - layer][i];
+        walls[upper][size - layer][i] = walls[right][i][layer - 1];
+        walls[right][i][layer - 1] = walls[down][layer - 1][size - 1 - i];
+        walls[down][layer - 1][size - 1 - i] = walls[left][size - 1 - i][size - layer];
+        walls[left][size - 1 - i][size - layer] = tmp;
     }
 }
 
-/* walls[order[0]] denotes upper wall
- * walls[order[1]] denotes left wall
- * walls[order[2]] denotes front wall
- * walls[order[3]] denotes right wall
- * walls[order[4]] denotes back wall
- * walls[order[5]] denotes down wall
- */
-static void rotate_layer_right(char walls[][SIZE][SIZE],
-                               const int order[6], int layer) {
-    int upper = order[0];
-    int left = order[1];
-    int right = order[3];
-    int down = order[5];
+static void rotate_layer_right(cube_t *cube, const int order[WALLS], int layer) {
+    int upper = order[UPPER_WALL];
+    int left = order[LEFT_WALL];
+    int right = order[RIGHT_WALL];
+    int down = order[DOWN_WALL];
 
-    for (int i = 0; i < SIZE; i++) {
-        char tmp = walls[upper][SIZE - layer][i];
-        walls[upper][SIZE - layer][i] = walls[left][SIZE - 1 - i][SIZE - layer];
-        walls[left][SIZE - 1 - i][SIZE - layer]
-                = walls[down][layer - 1][SIZE - 1 - i];
-        walls[down][layer - 1][SIZE - 1 - i] = walls[right][i][layer - 1];
+    int size = cube->size;
+    char ***walls = cube->walls;
+
+    for (int i = 0; i < size; i++) {
+        char tmp = walls[upper][size - layer][i];
+        walls[upper][size - layer][i] = walls[left][size - 1 - i][size - layer];
+        walls[left][size - 1 - i][size - layer] = walls[down][layer - 1][size - 1 - i];
+        walls[down][layer - 1][size - 1 - i] = walls[right][i][layer - 1];
         walls[right][i][layer - 1] = tmp;
     }
 }
 
-static void rotate_wall_left(char wall[][SIZE]) {
-    for (int i = 0; i < SIZE / 2; i++) {
-        for (int j = i; j < SIZE - 1 - i; j++) {
+static void rotate_wall_left(char *wall[], int size) {
+    for (int i = 0; i < size / 2; i++) {
+        for (int j = i; j < size - 1 - i; j++) {
             char tmp = wall[i][j];
-            wall[i][j] = wall[j][SIZE - 1 - i];
-            wall[j][SIZE - 1 - i] = wall[SIZE - 1 - i][SIZE - 1 - j];
-            wall[SIZE - 1 - i][SIZE - 1 - j] = wall[SIZE - 1 - j][i];
-            wall[SIZE - 1 - j][i] = tmp;
+            wall[i][j] = wall[j][size - 1 - i];
+            wall[j][size - 1 - i] = wall[size - 1 - i][size - 1 - j];
+            wall[size - 1 - i][size - 1 - j] = wall[size - 1 - j][i];
+            wall[size - 1 - j][i] = tmp;
         }
     }
 }
 
-static void rotate_wall_right(char wall[][SIZE]) {
-    for (int i = 0; i < SIZE / 2; i++) {
-        for (int j = i; j < SIZE - 1 - i; j++) {
+static void rotate_wall_right(char *wall[], int size) {
+    for (int i = 0; i < size / 2; i++) {
+        for (int j = i; j < size - 1 - i; j++) {
             char tmp = wall[i][j];
-            wall[i][j] = wall[SIZE - 1 - j][i];
-            wall[SIZE - 1 - j][i] = wall[SIZE - 1 - i][SIZE - 1 - j];
-            wall[SIZE - 1 - i][SIZE - 1 - j] = wall[j][SIZE - 1 - i];
-            wall[j][SIZE - 1 - i] = tmp;
+            wall[i][j] = wall[size - 1 - j][i];
+            wall[size - 1 - j][i] = wall[size - 1 - i][size - 1 - j];
+            wall[size - 1 - i][size - 1 - j] = wall[j][size - 1 - i];
+            wall[j][size - 1 - i] = tmp;
         }
     }
 }
 
-static void rotate_wall_upside_down(char wall[][SIZE]) {
-    int i = 0, j = SIZE - 1;
+static void rotate_wall_upside_down(char *wall[], int size) {
+    int i = 0, j = size - 1;
     while (i < j) {
-        swap_and_inverse_rows(wall[i], wall[j]);
+        swap_and_inverse_rows(wall[i], wall[j], size);
         i++, j--;
     }
     if (i == j) {
-        inverse_row(wall[i]);
+        inverse_row(wall[i], size);
     }
 }
 
-/* walls[order[0]] denotes upper wall
- * walls[order[1]] denotes left wall
- * walls[order[2]] denotes front wall
- * walls[order[3]] denotes right wall
- * walls[order[4]] denotes back wall
- * walls[order[5]] denotes down wall
- */
-static void rotate_left(char walls[][SIZE][SIZE], int order[6], int layers) {
-    int front = order[2];
-    int back = order[4];
+static void rotate_left(cube_t *cube, const int order[WALLS], int layers) {
+    int front = order[FRONT_WALL];
+    int back = order[BACK_WALL];
 
-    rotate_wall_left(walls[front]);
+    rotate_wall_left(cube->walls[front], cube->size);
 
     for (int i = 1; i <= layers; i++) {
-        rotate_layer_left(walls, order, i);
+        rotate_layer_left(cube, order, i);
     }
 
-    if (layers == SIZE) {
-        rotate_wall_right(walls[back]);
+    if (layers == cube->size) {
+        rotate_wall_right(cube->walls[back], cube->size);
     }
 }
 
-void rotate_right(char walls[][SIZE][SIZE], int order[6], int layers) {
-    int front = order[2];
-    int back = order[4];
+void rotate_right(cube_t *cube, const int order[WALLS], int layers) {
+    int front = order[FRONT_WALL];
+    int back = order[BACK_WALL];
 
-    rotate_wall_right(walls[front]);
+    rotate_wall_right(cube->walls[front], cube->size);
 
     for (int i = 1; i <= layers; i++) {
-        rotate_layer_right(walls, order, i);
+        rotate_layer_right(cube, order, i);
     }
 
-    if (layers == SIZE) {
-        rotate_wall_left(walls[back]);
+    if (layers == cube->size) {
+        rotate_wall_left(cube->walls[back], cube->size);
     }
 }
 
-/* walls[order[0]] denotes upper wall
- * walls[order[1]] denotes left wall
- * walls[order[2]] denotes front wall
- * walls[order[3]] denotes right wall
- * walls[order[4]] denotes back wall
- * walls[order[5]] denotes down wall
- */
-void rotate_layer_upside_down(char walls[][SIZE][SIZE], int order[6], int layer) {
-    int upper = order[0];
-    int left = order[1];
-    int right = order[3];
-    int down = order[5];
+void rotate_layer_upside_down(cube_t *cube, const int order[WALLS], int layer) {
+    int upper = order[UPPER_WALL];
+    int left = order[LEFT_WALL];
+    int right = order[RIGHT_WALL];
+    int down = order[DOWN_WALL];
 
-    swap_and_inverse_rows(walls[upper][SIZE - layer], walls[down][layer - 1]);
-    swap_and_inverse_columns(walls[left], SIZE - layer, walls[right], layer - 1);
+    int size = cube->size;
+
+    swap_and_inverse_rows(cube->walls[upper][size - layer],
+                          cube->walls[down][layer - 1], size);
+    swap_and_inverse_columns(cube->walls[left], size - layer,
+                             cube->walls[right], layer - 1, size);
 }
 
-/* walls[order[0]] denotes upper wall
- * walls[order[1]] denotes left wall
- * walls[order[2]] denotes front wall
- * walls[order[3]] denotes right wall
- * walls[order[4]] denotes back wall
- * walls[order[5]] denotes down wall
- */
-static void rotate_upside_down(char walls[][SIZE][SIZE], int order[6], int layers) {
-    int front = order[2];
-    int back = order[4];
+static void rotate_upside_down(cube_t *cube, const int order[WALLS], int layers) {
+    int front = order[FRONT_WALL];
+    int back = order[BACK_WALL];
 
-    rotate_wall_upside_down(walls[front]);
+    rotate_wall_upside_down(cube->walls[front], cube->size);
 
     for (int i = 1; i <= layers; i++) {
-        rotate_layer_upside_down(walls, order, i);
+        rotate_layer_upside_down(cube, order, i);
     }
 
-    if (layers == SIZE) {
-        rotate_wall_upside_down(walls[back]);
+    if (layers == cube->size) {
+        rotate_wall_upside_down(cube->walls[back], cube->size);
     }
 }
 
-/* walls[order[0]] denotes upper wall
- * walls[order[1]] denotes left wall
- * walls[order[2]] denotes front wall
- * walls[order[3]] denotes right wall
- * walls[order[4]] denotes back wall
- * walls[order[5]] denotes down wall
- */
-static void rotate_by_angle(char walls[][SIZE][SIZE], int order[6],
+static void rotate_by_angle(cube_t *cube, const int order[WALLS],
                             int layers, char angle) {
     switch (angle) {
-        case 0:
-            rotate_right(walls, order, layers);
+        case DEGREES_90_CLOCKWISE:
+            rotate_right(cube, order, layers);
             break;
-        case '\'':
-            rotate_left(walls, order, layers);
+        case DEGREES_90_COUNTERCLOCKWISE:
+            rotate_left(cube, order, layers);
             break;
-        case '"':
-            rotate_upside_down(walls, order, layers);
+        case DEGREES_180:
+            rotate_upside_down(cube, order, layers);
             break;
     }
 }
 
-/* When treating front wall as front:
- * walls[0] denotes upper wall
- * walls[1] denotes left wall
- * walls[2] denotes front wall
- * walls[3] denotes right wall
- * walls[4] denotes back wall
- * walls[5] denotes down wall
- */
-static void rotate_with_upper_as_front(char walls[][SIZE][SIZE],
-                                       int layers, char angle) {
-    rotate_wall_right(walls[1]);
-    rotate_wall_left(walls[3]);
-    rotate_wall_upside_down(walls[4]);
-    rotate_wall_upside_down(walls[5]);
+static void rotate_with_upper_as_front(cube_t *cube, int layers, char angle) {
+    int size = cube->size;
+    char ***walls = cube->walls;
 
-    /* When treating down wall as front:
-     * walls[4] denotes upper wall
-     * walls[1] denotes left wall
-     * walls[0] denotes front wall
-     * walls[3] denotes right wall
-     * walls[5] denotes back wall
-     * walls[2] denotes down wall
-     */
-    int order[] = {4, 1, 0, 3, 5, 2};
+    rotate_wall_right(walls[LEFT_WALL], size);
+    rotate_wall_left(walls[RIGHT_WALL], size);
+    rotate_wall_upside_down(walls[BACK_WALL], size);
+    rotate_wall_upside_down(walls[DOWN_WALL], size);
 
-    rotate_by_angle(walls, order, layers, angle);
+    int order[] = {BACK_WALL, LEFT_WALL, UPPER_WALL, RIGHT_WALL, DOWN_WALL, FRONT_WALL};
 
-    rotate_wall_left(walls[1]);
-    rotate_wall_right(walls[3]);
-    rotate_wall_upside_down(walls[4]);
-    rotate_wall_upside_down(walls[5]);
+    rotate_by_angle(cube, order, layers, angle);
+
+    rotate_wall_left(walls[LEFT_WALL], size);
+    rotate_wall_right(walls[RIGHT_WALL], size);
+    rotate_wall_upside_down(walls[BACK_WALL], size);
+    rotate_wall_upside_down(walls[DOWN_WALL], size);
 }
 
-/* When treating front wall as front:
- * walls[0] denotes upper wall
- * walls[1] denotes left wall
- * walls[2] denotes front wall
- * walls[3] denotes right wall
- * walls[4] denotes back wall
- * walls[5] denotes down wall
- */
-static void rotate_with_left_as_front(char walls[][SIZE][SIZE],
-                                      int layers, char angle) {
-    rotate_wall_left(walls[0]);
-    rotate_wall_right(walls[5]);
+static void rotate_with_left_as_front(cube_t *cube, int layers, char angle) {
+    int size = cube->size;
+    char ***walls = cube->walls;
 
-    /* When treating down wall as front:
-     * walls[0] denotes upper wall
-     * walls[4] denotes left wall
-     * walls[1] denotes front wall
-     * walls[2] denotes right wall
-     * walls[3] denotes back wall
-     * walls[5] denotes down wall
-     */
-    int order[] = {0, 4, 1, 2, 3, 5};
+    rotate_wall_left(walls[UPPER_WALL], size);
+    rotate_wall_right(walls[DOWN_WALL], size);
 
-    rotate_by_angle(walls, order, layers, angle);
+    int order[] = {UPPER_WALL, BACK_WALL, LEFT_WALL, FRONT_WALL, RIGHT_WALL, DOWN_WALL};
 
-    rotate_wall_right(walls[0]);
-    rotate_wall_left(walls[5]);
+    rotate_by_angle(cube, order, layers, angle);
+
+    rotate_wall_right(walls[UPPER_WALL], size);
+    rotate_wall_left(walls[DOWN_WALL], size);
 }
 
-/* When treating front wall as front:
- * walls[0] denotes upper wall
- * walls[1] denotes left wall
- * walls[2] denotes front wall
- * walls[3] denotes right wall
- * walls[4] denotes back wall
- * walls[5] denotes down wall
- */
-static inline void rotate_with_front_as_front(char walls[][SIZE][SIZE],
-                                              int layers, char angle) {
-    int order[] = {0, 1, 2, 3, 4, 5};
-    rotate_by_angle(walls, order, layers, angle);
+static inline void rotate_with_front_as_front(cube_t *cube, int layers, char angle) {
+    int order[] = {UPPER_WALL, LEFT_WALL, FRONT_WALL, RIGHT_WALL, BACK_WALL, DOWN_WALL};
+    rotate_by_angle(cube, order, layers, angle);
 }
 
-/* When treating front wall as front:
- * walls[0] denotes upper wall
- * walls[1] denotes left wall
- * walls[2] denotes front wall
- * walls[3] denotes right wall
- * walls[4] denotes back wall
- * walls[5] denotes down wall
- */
-static void rotate_with_right_as_front(char walls[][SIZE][SIZE],
-                                       int layers, char angle) {
-    rotate_wall_right(walls[0]);
-    rotate_wall_left(walls[5]);
+static void rotate_with_right_as_front(cube_t *cube, int layers, char angle) {
+    int size = cube->size;
+    char ***walls = cube->walls;
 
-    /* When treating down wall as front:
-     * walls[0] denotes upper wall
-     * walls[2] denotes left wall
-     * walls[3] denotes front wall
-     * walls[4] denotes right wall
-     * walls[1] denotes back wall
-     * walls[5] denotes down wall
-     */
-    int order[] = {0, 2, 3, 4, 1, 5};
+    rotate_wall_right(walls[UPPER_WALL], size);
+    rotate_wall_left(walls[DOWN_WALL], size);
 
-    rotate_by_angle(walls, order, layers, angle);
+    int order[] = {UPPER_WALL, FRONT_WALL, RIGHT_WALL, BACK_WALL, LEFT_WALL, DOWN_WALL};
 
-    rotate_wall_left(walls[0]);
-    rotate_wall_right(walls[5]);
+    rotate_by_angle(cube, order, layers, angle);
+
+    rotate_wall_left(walls[UPPER_WALL], size);
+    rotate_wall_right(walls[DOWN_WALL], size);
 }
 
-/* When treating front wall as front:
- * walls[0] denotes upper wall
- * walls[1] denotes left wall
- * walls[2] denotes front wall
- * walls[3] denotes right wall
- * walls[4] denotes back wall
- * walls[5] denotes down wall
- */
-static void rotate_with_back_as_front(char walls[][SIZE][SIZE],
-                                      int layers, char angle) {
-    rotate_wall_upside_down(walls[1]);
-    rotate_wall_upside_down(walls[2]);
-    rotate_wall_upside_down(walls[3]);
-    rotate_wall_upside_down(walls[4]);
+static void rotate_with_back_as_front(cube_t *cube, int layers, char angle) {
+    int size = cube->size;
+    char ***walls = cube->walls;
 
-    /* When treating down wall as front:
-     * walls[5] denotes upper wall
-     * walls[1] denotes left wall
-     * walls[4] denotes front wall
-     * walls[3] denotes right wall
-     * walls[2] denotes back wall
-     * walls[0] denotes down wall
-     */
-    int order[] = {5, 1, 4, 3, 2, 0};
+    rotate_wall_upside_down(walls[LEFT_WALL], size);
+    rotate_wall_upside_down(walls[FRONT_WALL], size);
+    rotate_wall_upside_down(walls[RIGHT_WALL], size);
+    rotate_wall_upside_down(walls[BACK_WALL], size);
 
-    rotate_by_angle(walls, order, layers, angle);
+    int order[] = {DOWN_WALL, LEFT_WALL, BACK_WALL, RIGHT_WALL, FRONT_WALL, UPPER_WALL};
 
-    rotate_wall_upside_down(walls[1]);
-    rotate_wall_upside_down(walls[2]);
-    rotate_wall_upside_down(walls[3]);
-    rotate_wall_upside_down(walls[4]);
+    rotate_by_angle(cube, order, layers, angle);
+
+    rotate_wall_upside_down(walls[LEFT_WALL], size);
+    rotate_wall_upside_down(walls[FRONT_WALL], size);
+    rotate_wall_upside_down(walls[RIGHT_WALL], size);
+    rotate_wall_upside_down(walls[BACK_WALL], size);
 }
 
-/* When treating front wall as front:
- * walls[0] denotes upper wall
- * walls[1] denotes left wall
- * walls[2] denotes front wall
- * walls[3] denotes right wall
- * walls[4] denotes back wall
- * walls[5] denotes down wall
- */
-static void rotate_with_down_as_front(char walls[][SIZE][SIZE],
-                                      int layers, char angle) {
-    rotate_wall_upside_down(walls[0]);
-    rotate_wall_left(walls[1]);
-    rotate_wall_right(walls[3]);
-    rotate_wall_upside_down(walls[4]);
+static void rotate_with_down_as_front(cube_t *cube, int layers, char angle) {
+    int size = cube->size;
+    char ***walls = cube->walls;
 
-    /* When treating down wall as front:
-     * walls[2] denotes upper wall
-     * walls[1] denotes left wall
-     * walls[5] denotes front wall
-     * walls[3] denotes right wall
-     * walls[0] denotes back wall
-     * walls[4] denotes down wall
-     */
-    int order[] = {2, 1, 5, 3, 0, 4};
+    rotate_wall_upside_down(walls[UPPER_WALL], size);
+    rotate_wall_left(walls[LEFT_WALL], size);
+    rotate_wall_right(walls[RIGHT_WALL], size);
+    rotate_wall_upside_down(walls[BACK_WALL], size);
 
-    rotate_by_angle(walls, order, layers, angle);
+    int order[] = {FRONT_WALL, LEFT_WALL, DOWN_WALL, RIGHT_WALL, UPPER_WALL, BACK_WALL};
 
-    rotate_wall_upside_down(walls[0]);
-    rotate_wall_right(walls[1]);
-    rotate_wall_left(walls[3]);
-    rotate_wall_upside_down(walls[4]);
+    rotate_by_angle(cube, order, layers, angle);
+
+    rotate_wall_upside_down(walls[UPPER_WALL], size);
+    rotate_wall_right(walls[LEFT_WALL], size);
+    rotate_wall_left(walls[RIGHT_WALL], size);
+    rotate_wall_upside_down(walls[BACK_WALL], size);
 }
 
-void rotate(char walls[][SIZE][SIZE], char front, int layers, char angle) {
+void rotate(cube_t *cube, char front, int layers, char angle) {
     if (layers == 0) {
-        layers = 1; // not given number of layers means number of layers is 1
+        /* Number of layers not given means number of layers is 1. */
+        layers = 1;
     }
 
     switch (front) {
-        case 'u':
-            rotate_with_upper_as_front(walls, layers, angle);
+        case UP:
+            rotate_with_upper_as_front(cube, layers, angle);
             break;
-        case 'l':
-            rotate_with_left_as_front(walls, layers, angle);
+        case LEFT:
+            rotate_with_left_as_front(cube, layers, angle);
             break;
-        case 'f':
-            rotate_with_front_as_front(walls, layers, angle);
+        case FRONT:
+            rotate_with_front_as_front(cube, layers, angle);
             break;
-        case 'r':
-            rotate_with_right_as_front(walls, layers, angle);
+        case RIGHT:
+            rotate_with_right_as_front(cube, layers, angle);
             break;
-        case 'b':
-            rotate_with_back_as_front(walls, layers, angle);
+        case BACK:
+            rotate_with_back_as_front(cube, layers, angle);
             break;
-        case 'd':
-            rotate_with_down_as_front(walls, layers, angle);
+        case DOWN:
+            rotate_with_down_as_front(cube, layers, angle);
             break;
     }
 }

@@ -1,8 +1,14 @@
 #include "input.h"
 
 int main() {
-    char walls[6][SIZE][SIZE];
-    init_cube(walls);
-    read_data(walls);
+    int cube_size;
+    int c = read_cube_size(&cube_size);
+
+    cube_t cube;
+    init_cube(&cube, cube_size);
+
+    read_commands(&cube, c);
+    dispose_cube(&cube);
+
     return 0;
 }

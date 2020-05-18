@@ -4,29 +4,29 @@
 #include "cube.h"
 #include "rotation.h"
 
-static inline void execute_when_newline(char walls[][SIZE][SIZE], char *front,
+static inline void execute_when_newline(cube_t *cube, char *front,
                                         int *layers, char *angle) {
     if (*front != 0) {
-        // execute previous command
-        rotate(walls, *front, *layers, *angle);
+        /* Execute previous command. */
+        rotate(cube, *front, *layers, *angle);
     }
 
-    // set program state for new command
+    /* Set program state for new command. */
     *front = 0;
     *layers = 0;
     *angle = 0;
 
-    display_cube(walls);
+    display_cube(cube);
 }
 
-static inline void execute_when_letter(char walls[][SIZE][SIZE], int c,
-                                       char *front, int *layers, char *angle) {
+static inline void execute_when_letter(cube_t *cube, int c, char *front,
+                                       int *layers, char *angle) {
     if (*front != 0) {
-        // execute previous command
-        rotate(walls, *front, *layers, *angle);
+        /* Execute previous command. */
+        rotate(cube, *front, *layers, *angle);
     }
 
-    // update program state
+    /* Update program state. */
     *front = (char) c;
     *layers = 0;
     *angle = 0;
@@ -36,13 +36,13 @@ static inline int execute_when_digit(int c, int layers) {
     return layers * 10 + (c - '0');
 }
 
-static inline void execute_when_quote(char walls[][SIZE][SIZE], int c,
-                        char *front, int *layers, char *angle) {
+static inline void execute_when_quote(cube_t *cube, int c, char *front,
+                                      int *layers, char *angle) {
     *angle = (char) c;
 
-    rotate(walls, *front, *layers, *angle);
+    rotate(cube, *front, *layers, *angle);
 
-    // set program state for new command
+    /* Set program state for new command. */
     *front = 0;
     *layers = 0;
     *angle = 0;

@@ -3,6 +3,6 @@
 
 #include "cube.h"
 
-void rotate(char walls[][SIZE][SIZE], char front, int layers, char angle);
+void rotate(cube_t *cube, char front, int layers, char angle);
 
 #endif // ROTATION_H

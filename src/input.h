@@ -5,6 +5,8 @@
 
 #define END_OF_DATA '.'
 
-void read_data(char walls[][SIZE][SIZE]);
+int read_cube_size(int *size);
+
+void read_commands(cube_t *cube, int c);
 
 #endif // INPUT_H

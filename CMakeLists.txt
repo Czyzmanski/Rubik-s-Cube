@@ -8,4 +8,5 @@ add_executable(RubiksCube
         src/rotation.h
         src/rotation.c
         src/cube.h
-        src/cube.c src/command.h)
+        src/cube.c
+        src/command.h)
